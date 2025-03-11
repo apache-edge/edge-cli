@@ -1,14 +1,34 @@
 // swift-tools-version: 6.0
-// The swift-tools-version declares the minimum version of Swift required to build this package.
-
 import PackageDescription
 
 let package = Package(
     name: "edge-cli",
+    platforms: [
+        .macOS(.v15)
+    ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
+    ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
+        /// The main executable provided by edge-cli.
         .executableTarget(
-            name: "edge-cli"),
+            name: "edge",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .target(name: "EdgeCLI")
+            ]
+        ),
+
+        /// The EdgeAgent executable. It's currently here for development purposes, and will be
+        /// moved to a separate package in the future.
+        .executableTarget(
+            name: "EdgeAgent",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ]
+        ),
+
+        /// Contains everything EdgeCLI, except for the command line interface.
+        .target(name: "EdgeCLI")
     ]
 )
