@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import Shell
 
 /// Builds a Docker-compatible container image from the given executable.
 /// The image is saved to the given path.
@@ -34,11 +35,10 @@ public func buildContainer(
     // chmod 755 /bin/executable
     try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: layerExecutable.path)
     
-    // Create the layer tarball
     let layerTarPath = tempDir.appendingPathComponent("layer.tar")
-    try createTarball(from: layerDir, to: layerTarPath)
+    try await createTarball(from: layerDir, to: layerTarPath)
     
-    // Calculate the layer SHA256 checksum
+    // Calculate the SHA256 checksum of the layer tarball
     let layerData = try Data(contentsOf: layerTarPath)
     let layerSHA = sha256(data: layerData)
     
@@ -105,7 +105,7 @@ public func buildContainer(
     try manifestData.write(to: manifestPath)
     
     // Create the final container image tarball
-    try createTarball(from: imageDir, to: URL(fileURLWithPath: outputPath))
+    try await createTarball(from: imageDir, to: URL(fileURLWithPath: outputPath))
     
     // Clean up temporary directories and files
     try FileManager.default.removeItem(at: tempDir)
@@ -117,17 +117,14 @@ private func sha256(data: Data) -> String {
     return digest.map { String(format: "%02x", $0) }.joined()
 }
 
-// Create tarball from directory
-private func createTarball(from sourceDir: URL, to destinationURL: URL) throws {
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
-    process.arguments = ["cf", destinationURL.path, "-C", sourceDir.path, "."]
-    try process.run()
-    process.waitUntilExit()
-    
-    if process.terminationStatus != 0 {
-        throw NSError(domain: "ContainerBuilder", code: Int(process.terminationStatus), userInfo: [NSLocalizedDescriptionKey: "Failed to create tarball"])
-    }
+/// Creates a tarball from the given source directory using /usr/bin/tar.
+///
+/// - Parameter sourceDir: The directory to create a tarball from.
+/// - Parameter destinationURL: The URL to save the tarball to.
+/// - Throws: An error if the tarball cannot be created.
+private func createTarball(from sourceDir: URL, to destinationURL: URL) async throws {
+    // Use Shell.run instead of directly creating a Process
+    try await Shell.run(["/usr/bin/tar", "cf", destinationURL.path, "-C", sourceDir.path, "."])
 }
 
 struct ContainerConfig: Codable {
