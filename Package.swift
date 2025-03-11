@@ -33,10 +33,19 @@ let package = Package(
             name: "EdgeCLI",
             dependencies: [
                 .target(name: "ContainerBuilder"),
+                .target(name: "Shell"),
             ]
         ),
 
         /// Tools to build OCI-compliant container images.
-        .target(name: "ContainerBuilder"),
+        .target(
+            name: "ContainerBuilder",
+            dependencies: [
+                .target(name: "Shell"),
+            ]
+        ),
+        
+        /// Utility for executing shell commands.
+        .target(name: "Shell"),
     ]
 )

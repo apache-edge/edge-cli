@@ -1,4 +1,5 @@
 import Foundation
+import Shell
 
 /// Represents the Swift Package Manager interface for building and managing Swift packages.
 public struct SwiftPM {

@@ -1,12 +1,12 @@
 import Foundation
 
 /// Utility for executing shell commands.
-public  enum Shell {
+public enum Shell {
     /// Error thrown when a process execution fails.
-    enum Error: Swift.Error, LocalizedError {
+    public enum Error: Swift.Error, LocalizedError {
         case nonZeroExit(command: [String], exitCode: Int32)
         
-        var errorDescription: String? {
+        public var errorDescription: String? {
             switch self {
             case .nonZeroExit(let command, let exitCode):
                 return "Command '\(command.joined(separator: " "))' failed with exit code \(exitCode)"
@@ -90,4 +90,4 @@ public  enum Shell {
             }
         }
     }
-}
+} 

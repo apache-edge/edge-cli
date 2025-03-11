@@ -2,6 +2,7 @@ import ArgumentParser
 import Foundation
 import EdgeCLI
 import ContainerBuilder
+import Shell
 
 struct RunCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
