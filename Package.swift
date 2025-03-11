@@ -29,6 +29,14 @@ let package = Package(
         ),
 
         /// Contains everything EdgeCLI, except for the command line interface.
-        .target(name: "EdgeCLI")
+        .target(
+            name: "EdgeCLI",
+            dependencies: [
+                .target(name: "ContainerBuilder"),
+            ]
+        ),
+
+        /// Tools to build OCI-compliant container images.
+        .target(name: "ContainerBuilder"),
     ]
 )
