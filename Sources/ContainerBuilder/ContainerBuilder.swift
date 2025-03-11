@@ -4,35 +4,34 @@ import CryptoKit
 /// Builds a Docker-compatible container image from the given executable.
 /// The image is saved to the given path.
 ///
-/// This follows the OCI Image Format Specification:
-/// https://github.com/opencontainers/image-spec
+/// This currently follows the format expected by `docker load`, which is not
+/// the same as the OCI Image Format Specification.
 public func buildContainer(
     architecture: String = "arm64",
     executable: URL,
     outputPath: String
 ) async throws {
-    // Create a temporary working directory
+    // TODO: Implement this using the OCI Image Format Specification instead of Docker's format?
+    // TODO: Write directly to a tar file instead of using a temporary directory
+
     let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
     
-    // Get the executable name
     let executableName = executable.lastPathComponent
     let imageName = executableName.lowercased()
     
-    // Create layer content directory structure
-    // OCI Layer Format Specification: https://github.com/opencontainers/image-spec/blob/main/layer.md
     let layerDir = tempDir.appendingPathComponent("layer")
     try FileManager.default.createDirectory(at: layerDir, withIntermediateDirectories: true)
     
-    // Create bin directory in the layer
+    // mkdir /bin
     let binDir = layerDir.appendingPathComponent("bin", isDirectory: true)
     try FileManager.default.createDirectory(at: binDir, withIntermediateDirectories: true)
     
-    // Copy executable to the layer's bin directory
+    // cp executable /bin/executable
     let layerExecutable = binDir.appendingPathComponent(executableName)
     try FileManager.default.copyItem(at: executable, to: layerExecutable)
     
-    // Make executable file permissions (755)
+    // chmod 755 /bin/executable
     try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: layerExecutable.path)
     
     // Create the layer tarball
@@ -44,7 +43,7 @@ public func buildContainer(
     let layerSHA = sha256(data: layerData)
     
     // Create config.json
-    let config = OCIConfig(
+    let config = DockerConfig(
         architecture: architecture,
         created: ISO8601DateFormatter().string(from: Date()),
         os: "linux",
@@ -91,9 +90,9 @@ public func buildContainer(
     let imageRepositoriesPath = imageDir.appendingPathComponent("repositories")
     try repositoriesData.write(to: imageRepositoriesPath)
     
-    // Create manifest.json for OCI container
-    let manifest: [OCIManifestEntry] = [
-        OCIManifestEntry(
+    // Create manifest.json for Docker container
+    let manifest: [DockerManifestEntry] = [
+        DockerManifestEntry(
             Config: "\(configSHA).json",
             RepoTags: ["\(imageName):\(imageTag)"],
             Layers: ["\(layerSHA).tar"]
@@ -131,7 +130,6 @@ private func createTarball(from sourceDir: URL, to destinationURL: URL) throws {
     }
 }
 
-// OCI container config structures
 struct ContainerConfig: Codable {
     var Cmd: [String]
     var Env: [String]
@@ -143,7 +141,7 @@ struct RootFS: Codable {
     var diff_ids: [String]
 }
 
-struct OCIConfig: Codable {
+struct DockerConfig: Codable {
     var architecture: String
     var created: String
     var os: String
@@ -151,14 +149,8 @@ struct OCIConfig: Codable {
     var rootfs: RootFS
 }
 
-/// A single entry in an OCI manifest.json file
-struct OCIManifestEntry: Codable {
-    /// The filename of the config JSON
+struct DockerManifestEntry: Codable {
     var Config: String
-    
-    /// The list of repository tags for this image
     var RepoTags: [String]
-    
-    /// The list of layer filenames that comprise this image
     var Layers: [String]
 }
