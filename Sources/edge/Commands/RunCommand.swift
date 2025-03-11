@@ -3,10 +3,10 @@ import Foundation
 import EdgeCLI
 import ContainerBuilder
 
-struct BuildCommand: AsyncParsableCommand {
+struct RunCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "build",
-        abstract: "Build EdgeOS projects."
+        commandName: "run",
+        abstract: "Run EdgeOS projects."
     )
 
     enum Error: Swift.Error, CustomStringConvertible {

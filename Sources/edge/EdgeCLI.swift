@@ -7,7 +7,7 @@ struct EdgeCLI: AsyncParsableCommand {
         commandName: "edge",
         abstract: "Edge CLI",
         subcommands: [
-            BuildCommand.self
+            RunCommand.self
         ]
     )
 }
