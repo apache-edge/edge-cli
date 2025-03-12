@@ -20,9 +20,11 @@ public enum Shell {
     /// (indicated by a non-zero exit code), an error is thrown.
     ///
     /// - Parameter arguments: An array of command-line arguments to execute.
-    /// - Returns: The output of the command as a string
+    /// - Returns: A string containing the command's standard output and standard error.
     /// - Throws: An error if the command execution fails
     @discardableResult public static func run(_ arguments: [String]) async throws -> String {
+        // TODO: It's probably a good idea to separate stdout and stderr streams.
+
         // Log the command before execution
         print("Executing: \(arguments.joined(separator: " "))")
         
@@ -40,6 +42,7 @@ public enum Shell {
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
         process.environment = [
+            // TODO: Don't hardcode the path to the Swift toolchain – manage our own toolchain instead.
             "PATH": "/Library/Developer/Toolchains/swift-6.0.3-RELEASE.xctoolchain/usr/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
             "TOOLCHAINS": "org.swift.603202412101a"
         ]
@@ -90,4 +93,4 @@ public enum Shell {
             }
         }
     }
-} 
+}
