@@ -39,6 +39,7 @@ public func buildContainer(
     try await createTarball(from: layerDir, to: layerTarPath)
     
     // Calculate the SHA256 checksum of the layer tarball
+    // TODO: Switch to NIOFilesystem instead of Data(contentsOf:)
     let layerData = try Data(contentsOf: layerTarPath)
     let layerSHA = sha256(data: layerData)
     
@@ -90,7 +91,7 @@ public func buildContainer(
     let imageRepositoriesPath = imageDir.appendingPathComponent("repositories")
     try repositoriesData.write(to: imageRepositoriesPath)
     
-    // Create manifest.json for Docker container
+    // manifest.json
     let manifest: [DockerManifestEntry] = [
         DockerManifestEntry(
             Config: "\(configSHA).json",
@@ -99,15 +100,12 @@ public func buildContainer(
         )
     ]
     
-    // Encode manifest to JSON using JSONEncoder
     let manifestData = try JSONEncoder().encode(manifest)
     let manifestPath = imageDir.appendingPathComponent("manifest.json")
     try manifestData.write(to: manifestPath)
     
-    // Create the final container image tarball
     try await createTarball(from: imageDir, to: URL(fileURLWithPath: outputPath))
-    
-    // Clean up temporary directories and files
+
     try FileManager.default.removeItem(at: tempDir)
 }
 
@@ -123,7 +121,6 @@ private func sha256(data: Data) -> String {
 /// - Parameter destinationURL: The URL to save the tarball to.
 /// - Throws: An error if the tarball cannot be created.
 private func createTarball(from sourceDir: URL, to destinationURL: URL) async throws {
-    // Use Shell.run instead of directly creating a Process
     try await Shell.run(["/usr/bin/tar", "cf", destinationURL.path, "-C", sourceDir.path, "."])
 }
 
