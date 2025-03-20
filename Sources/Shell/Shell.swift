@@ -67,34 +67,40 @@ public enum Shell {
 
         try process.run()
 
-        return try await withCheckedThrowingContinuation { continuation in
-            process.terminationHandler = { proc in
-                // Clean up handlers
-                stdoutPipe.fileHandleForReading.readabilityHandler = nil
-                stderrPipe.fileHandleForReading.readabilityHandler = nil
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                process.terminationHandler = { proc in
+                    // Clean up handlers
+                    stdoutPipe.fileHandleForReading.readabilityHandler = nil
+                    stderrPipe.fileHandleForReading.readabilityHandler = nil
 
-                // Close write handles to ensure we can read all data
-                stdoutCapture.fileHandleForWriting.closeFile()
-                stderrCapture.fileHandleForWriting.closeFile()
+                    // Close write handles to ensure we can read all data
+                    stdoutCapture.fileHandleForWriting.closeFile()
+                    stderrCapture.fileHandleForWriting.closeFile()
 
-                if process.terminationStatus == 0 {
-                    // Read captured output
-                    let stdoutData = stdoutCapture.fileHandleForReading.readDataToEndOfFile()
-                    let stderrData = stderrCapture.fileHandleForReading.readDataToEndOfFile()
+                    if process.terminationStatus == 0 {
+                        // Read captured output
+                        let stdoutData = stdoutCapture.fileHandleForReading.readDataToEndOfFile()
+                        let stderrData = stderrCapture.fileHandleForReading.readDataToEndOfFile()
 
-                    // Combine stdout and stderr
-                    let combinedData = stdoutData + stderrData
-                    let output = String(data: combinedData, encoding: .utf8) ?? ""
-                    continuation.resume(returning: output)
-                } else {
-                    continuation.resume(
-                        throwing: Error.nonZeroExit(
-                            command: arguments,
-                            exitCode: process.terminationStatus
+                        // Combine stdout and stderr
+                        let combinedData = stdoutData + stderrData
+                        let output = String(data: combinedData, encoding: .utf8) ?? ""
+                        continuation.resume(returning: output)
+                    } else {
+                        continuation.resume(
+                            throwing: Error.nonZeroExit(
+                                command: arguments,
+                                exitCode: process.terminationStatus
+                            )
                         )
-                    )
+                    }
                 }
             }
+        } onCancel: {
+            // Kill the process when the task is cancelled
+            logger.trace("Task cancelled, terminating process: \(arguments.joined(separator: " "))")
+            process.terminate()
         }
     }
 }
