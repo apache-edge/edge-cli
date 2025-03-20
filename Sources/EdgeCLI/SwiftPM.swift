@@ -16,8 +16,11 @@ public struct SwiftPM: Sendable {
         /// Print the binary output path
         case showBinPath
 
-        /// Built the specified target.
+        /// Build the specified target.
         case target(String)
+
+        /// Build the specified product.
+        case product(String)
 
         case quiet
 
@@ -30,6 +33,8 @@ public struct SwiftPM: Sendable {
                 return ["--show-bin-path"]
             case .target(let target):
                 return ["--target", target]
+            case .product(let product):
+                return ["--product", product]
             case .quiet:
                 return ["--quiet"]
             }
