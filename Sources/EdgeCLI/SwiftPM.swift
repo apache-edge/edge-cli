@@ -2,14 +2,14 @@ import Foundation
 import Shell
 
 /// Represents the Swift Package Manager interface for building and managing Swift packages.
-public struct SwiftPM {
+public struct SwiftPM: Sendable {
     public let path: String
 
     public init(path: String = "/usr/bin/swift") {
         self.path = path
     }
 
-    public enum BuildOption {
+    public enum BuildOption: Sendable {
         /// Filter for selecting a specific Swift SDK to build with.
         case swiftSDK(String)
 
@@ -50,10 +50,10 @@ public struct SwiftPM {
 
     /// The return type of the `dumpPackage` method.
     /// Currently incomplete.
-    public struct Package: Decodable {
+    public struct Package: Decodable, Sendable {
         public var targets: [Target]
 
-        public struct Target: Decodable {
+        public struct Target: Decodable, Sendable {
             public var name: String
             public var type: String
         }
