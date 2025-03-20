@@ -18,6 +18,9 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .target(name: "EdgeCLI"),
                 .product(name: "Logging", package: "swift-log"),
+            ],
+            resources: [
+                .copy("Resources")
             ]
         ),
 
