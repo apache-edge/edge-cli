@@ -22,6 +22,9 @@ struct RunCommand: AsyncParsableCommand {
         abstract: "Run EdgeOS projects."
     )
 
+    @Flag(name: .shortAndLong, help: "Attach a debugger to the container")
+    var debug: Bool = false
+
     func run() async throws {
         let logger = Logger(label: "apache-edge.cli.run")
 
@@ -48,7 +51,31 @@ struct RunCommand: AsyncParsableCommand {
 
         logger.info("Building container")
         let imageName = executableTarget.name.lowercased()
-        let imageSpec = ContainerImageSpec.withExecutable(executable: executable)
+
+        var imageSpec = ContainerImageSpec.withExecutable(executable: executable)
+
+        if debug {
+            // Include the ds2 executable in the container image.
+            guard
+                let ds2URL = Bundle.module.url(
+                    forResource: "ds2-124963fd-static-linux-arm64",
+                    withExtension: nil
+                )
+            else {
+                fatalError("Could not find ds2 executable in bundle resources")
+            }
+
+            let ds2Files = [
+                ContainerImageSpec.Layer.File(
+                    source: ds2URL,
+                    destination: "/bin/ds2",
+                    permissions: 0o755
+                )
+            ]
+            let ds2Layer = ContainerImageSpec.Layer(files: ds2Files)
+            imageSpec.layers.insert(ds2Layer, at: 0)
+        }
+
         try await buildDockerContainerImage(
             image: imageSpec,
             imageName: imageName,
@@ -58,7 +85,16 @@ struct RunCommand: AsyncParsableCommand {
         logger.info("Loading into Docker")
         try await Shell.run(["docker", "load", "-i", "\(executableTarget.name)-container.tar"])
 
-        logger.info("Running container")
-        try await Shell.run(["docker", "run", "--rm", imageName])
+        if debug {
+            logger.info("Running container with debugger")
+            try await Shell.run([
+                "docker", "run", "--rm", "-it", "-p", "4242:4242",
+                "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined", imageName,
+                "ds2", "gdbserver", "0.0.0.0:4242", "/bin/\(executableTarget.name)",
+            ])
+        } else {
+            logger.info("Running container")
+            try await Shell.run(["docker", "run", "--rm", imageName])
+        }
     }
 }
