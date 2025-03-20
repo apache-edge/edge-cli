@@ -38,7 +38,7 @@ struct RunCommand: AsyncParsableCommand {
         }
 
         try await swiftPM.build(
-            .target(executableTarget.name),
+            .product(executableTarget.name),
             .swiftSDK("aarch64-swift-linux-musl")
         )
 
