@@ -35,3 +35,23 @@ swift run --package-path ../../ -- edge run
 
 This will build the Edge CLI and execute it's `run` command. The Edge CLI will in turn build the
 `HelloWorld` example using the Swift Static Linux SDK, and run it in a Docker container.
+
+### Debugging
+
+To debug the `HelloWorld` example, you can use the following command:
+
+```sh
+swift run --package-path ../../ -- edge run --debug
+```
+
+You can now attach the LLDB debugger using port `4242` like this:
+
+```sh
+lldb
+(lldb) target create .build/debug/HelloWorld
+(lldb) settings set target.sdk-path "<path-to-sdk.artifactbundle>/swift-6.0.3-RELEASE_static-linux-0.0.1/swift-linux-musl/musl-1.2.5.sdk/aarch64"
+(lldb) settings set target.swift-module-search-paths "<path-to-sdk.artifactbundle>/swift-6.0.3-RELEASE_static-linux-0.0.1/swift-linux-musl/musl-1.2.5.sdk/aarch64/usr/lib/swift_static/linux-static"
+(lldb) gdb-remote localhost:4242
+```
+
+Unfortunately, running expressions (e.g. `po`) doesn't work yet.

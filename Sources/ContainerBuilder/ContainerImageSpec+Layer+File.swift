@@ -4,13 +4,13 @@ extension ContainerImageSpec.Layer {
     /// Represents a file to be included in a container layer.
     public struct File {
         /// The source URL of the file.
-        public let source: URL
+        public var source: URL
 
         /// The destination path of the file in the container.
-        public let destination: String
+        public var destination: String
 
         /// The permissions to set on the file.
-        public let permissions: UInt16?
+        public var permissions: UInt16?
 
         /// Creates a new container file.
         ///
