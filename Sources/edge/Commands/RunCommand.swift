@@ -2,14 +2,10 @@ import ArgumentParser
 import ContainerBuilder
 import EdgeCLI
 import Foundation
+import Logging
 import Shell
 
 struct RunCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "run",
-        abstract: "Run EdgeOS projects."
-    )
-
     enum Error: Swift.Error, CustomStringConvertible {
         case noExecutableTarget
 
@@ -21,7 +17,14 @@ struct RunCommand: AsyncParsableCommand {
         }
     }
 
+    static let configuration = CommandConfiguration(
+        commandName: "run",
+        abstract: "Run EdgeOS projects."
+    )
+
     func run() async throws {
+        let logger = Logger(label: "apache-edge.cli.run")
+
         let swiftPM = SwiftPM()
         let package = try await swiftPM.dumpPackage()
 
@@ -43,7 +46,7 @@ struct RunCommand: AsyncParsableCommand {
         ).trimmingCharacters(in: .whitespacesAndNewlines)
         let executable = URL(fileURLWithPath: binPath).appendingPathComponent(executableTarget.name)
 
-        print("Building container")
+        logger.info("Building container")
         let imageName = executableTarget.name.lowercased()
         let imageSpec = ContainerImageSpec.withExecutable(executable: executable)
         try await buildDockerContainerImage(
@@ -52,10 +55,10 @@ struct RunCommand: AsyncParsableCommand {
             outputPath: "\(executableTarget.name)-container.tar"
         )
 
-        print("Loading into Docker")
+        logger.info("Loading into Docker")
         try await Shell.run(["docker", "load", "-i", "\(executableTarget.name)-container.tar"])
 
-        print("Running container")
+        logger.info("Running container")
         try await Shell.run(["docker", "run", "--rm", imageName])
     }
 }
