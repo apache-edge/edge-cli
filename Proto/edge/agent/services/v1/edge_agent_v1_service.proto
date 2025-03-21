@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package edge.agent.services.v1;
+
+service EdgeAgentService {
+    rpc RunContainer(RunContainerRequest) returns (stream RunContainerResponse);
+}
+
+message RunContainerRequest {
+    
+}
+
+message RunContainerResponse {
+
+}

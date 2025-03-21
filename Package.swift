@@ -13,6 +13,9 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.6.3"),
+        .package(url: "https://github.com/grpc/grpc-swift.git", from: "2.0.0"),
+        .package(url: "https://github.com/grpc/grpc-swift-nio-transport.git", from: "1.0.0"),
+        .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "1.0.0"),
     ],
     targets: [
         /// The main executable provided by edge-cli.
@@ -61,6 +64,15 @@ let package = Package(
             name: "Shell",
             dependencies: [
                 .product(name: "Logging", package: "swift-log")
+            ]
+        ),
+
+        /// Protobuf definitions for the EdgeAgent service.
+        .target(
+            name: "EdgeAgentProto",
+            dependencies: [
+                .product(name: "GRPCCore", package: "grpc-swift"),
+                .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
             ]
         ),
     ]
