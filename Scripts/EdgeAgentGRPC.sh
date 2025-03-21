@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This scripts generates the EdgeAgentProto Swift code. It requires `protoc` to be available in the PATH.
+# This scripts generates the EdgeAgentGRPC Swift code. It requires `protoc` to be available in the PATH.
 # It should be run from the root of the project.
 
 # Get the binary path
@@ -14,17 +14,17 @@ if [ ! -f "$PROTOC_GEN_GRPC_PATH" ]; then
     swift build --product protoc-gen-grpc-swift
 fi
 
-rm -rf Sources/EdgeAgentProto/Proto
-mkdir -p Sources/EdgeAgentProto/Proto
+rm -rf Sources/EdgeAgentGRPC/Proto
+mkdir -p Sources/EdgeAgentGRPC/Proto
 
 protoc \
     --plugin $PROTOC_GEN_GRPC_PATH \
-    --grpc-swift_out=Sources/EdgeAgentProto/Proto \
+    --grpc-swift_out=Sources/EdgeAgentGRPC/Proto \
     --grpc-swift_opt=Visibility=Public \
     --grpc-swift_opt=Server=True \
     --grpc-swift_opt=Client=True \
     --include_imports \
-    --descriptor_set_out=Sources/EdgeAgentProto/Proto/edge_agent.protoset \
+    --descriptor_set_out=Sources/EdgeAgentGRPC/Proto/edge_agent.protoset \
     --experimental_allow_proto3_optional \
     -I=Proto \
     Proto/edge/agent/services/v1/*.proto
@@ -37,7 +37,7 @@ fi
 
 protoc \
     --plugin $PROTOC_GEN_SWIFT_PATH \
-    --swift_out=Sources/EdgeAgentProto/Proto \
+    --swift_out=Sources/EdgeAgentGRPC/Proto \
     --swift_opt=Visibility=Public \
     --experimental_allow_proto3_optional \
     -I=Proto \
