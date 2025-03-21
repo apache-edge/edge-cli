@@ -1,7 +1,7 @@
 import ArgumentParser
-import Foundation
-import EdgeCLI
 import ContainerBuilder
+import EdgeCLI
+import Foundation
 import Shell
 
 struct RunCommand: AsyncParsableCommand {
@@ -20,28 +20,42 @@ struct RunCommand: AsyncParsableCommand {
             }
         }
     }
-    
+
     func run() async throws {
         let swiftPM = SwiftPM()
         let package = try await swiftPM.dumpPackage()
 
         // For now, just use the first executable target.
-        guard let executableTarget = package.targets.first(where: { $0.type == "executable" }) else {
+        guard let executableTarget = package.targets.first(where: { $0.type == "executable" })
+        else {
             throw Error.noExecutableTarget
         }
 
-        try await swiftPM.build(.target(executableTarget.name), .swiftSDK("aarch64-swift-linux-musl"))
+        try await swiftPM.build(
+            .target(executableTarget.name),
+            .swiftSDK("aarch64-swift-linux-musl")
+        )
 
-        let binPath = try await swiftPM.build(.showBinPath, .swiftSDK("aarch64-swift-linux-musl"), .quiet).trimmingCharacters(in: .whitespacesAndNewlines)
+        let binPath = try await swiftPM.build(
+            .showBinPath,
+            .swiftSDK("aarch64-swift-linux-musl"),
+            .quiet
+        ).trimmingCharacters(in: .whitespacesAndNewlines)
         let executable = URL(fileURLWithPath: binPath).appendingPathComponent(executableTarget.name)
 
         print("Building container")
-        try await buildContainer(executable: executable, outputPath: "\(executableTarget.name)-container.tar")
+        let imageName = executableTarget.name.lowercased()
+        let imageSpec = ContainerImageSpec.withExecutable(executable: executable)
+        try await buildDockerContainerImage(
+            image: imageSpec,
+            imageName: imageName,
+            outputPath: "\(executableTarget.name)-container.tar"
+        )
 
         print("Loading into Docker")
         try await Shell.run(["docker", "load", "-i", "\(executableTarget.name)-container.tar"])
 
         print("Running container")
-        try await Shell.run(["docker", "run", "--rm", "\(executableTarget.name.lowercased())"])
+        try await Shell.run(["docker", "run", "--rm", imageName])
     }
 }
