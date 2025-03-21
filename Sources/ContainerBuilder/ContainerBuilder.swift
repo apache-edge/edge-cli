@@ -106,9 +106,9 @@ public func buildDockerContainerImage(
     try FileManager.default.createDirectory(at: imageDir, withIntermediateDirectories: true)
 
     // Copy layers and config to image directory
-    for (layerSHA, layerPath) in zip(layerSHAs, layerPaths) {
-        let imageLayerPath = imageDir.appendingPathComponent("\(layerSHA).tar")
-        try FileManager.default.copyItem(at: layerPath, to: imageLayerPath)
+    for (layerSHA, originPath) in zip(layerSHAs, layerPaths) {
+        let destinationPath = imageDir.appendingPathComponent("\(layerSHA).tar")
+        try FileManager.default.copyItem(at: originPath, to: destinationPath)
     }
 
     let imageConfigPath = imageDir.appendingPathComponent("\(configSHA).json")
