@@ -9,4 +9,3 @@ struct EdgeCLI: ParsableCommand {
         subcommands: []
     )
 }
-
