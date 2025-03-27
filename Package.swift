@@ -8,6 +8,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.6.3"),
     ],
     targets: [
         /// The main executable provided by edge-cli.
@@ -15,7 +16,8 @@ let package = Package(
             name: "edge",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .target(name: "EdgeCLI")
+                .target(name: "EdgeCLI"),
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
 
@@ -25,6 +27,7 @@ let package = Package(
             name: "EdgeAgent",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
 
@@ -34,6 +37,7 @@ let package = Package(
             dependencies: [
                 .target(name: "ContainerBuilder"),
                 .target(name: "Shell"),
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
 
@@ -41,11 +45,16 @@ let package = Package(
         .target(
             name: "ContainerBuilder",
             dependencies: [
-                .target(name: "Shell"),
+                .target(name: "Shell")
             ]
         ),
-        
+
         /// Utility for executing shell commands.
-        .target(name: "Shell"),
+        .target(
+            name: "Shell",
+            dependencies: [
+                .product(name: "Logging", package: "swift-log")
+            ]
+        ),
     ]
 )
