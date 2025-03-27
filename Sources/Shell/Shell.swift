@@ -27,7 +27,7 @@ public enum Shell {
     /// - Returns: A string containing the command's standard output and standard error.
     /// - Throws: An error if the command execution fails
     @discardableResult public static func run(_ arguments: [String]) async throws -> String {
-        logger.info("Executing: \(arguments.joined(separator: " "))")
+        logger.info("Running command", metadata: ["command": .array(arguments.map { .string($0) })])
 
         let process = Process()
 
@@ -67,34 +67,45 @@ public enum Shell {
 
         try process.run()
 
-        return try await withCheckedThrowingContinuation { continuation in
-            process.terminationHandler = { proc in
-                // Clean up handlers
-                stdoutPipe.fileHandleForReading.readabilityHandler = nil
-                stderrPipe.fileHandleForReading.readabilityHandler = nil
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                process.terminationHandler = { proc in
+                    // Clean up handlers
+                    stdoutPipe.fileHandleForReading.readabilityHandler = nil
+                    stderrPipe.fileHandleForReading.readabilityHandler = nil
 
-                // Close write handles to ensure we can read all data
-                stdoutCapture.fileHandleForWriting.closeFile()
-                stderrCapture.fileHandleForWriting.closeFile()
+                    // Close write handles to ensure we can read all data
+                    stdoutCapture.fileHandleForWriting.closeFile()
+                    stderrCapture.fileHandleForWriting.closeFile()
 
-                if process.terminationStatus == 0 {
-                    // Read captured output
-                    let stdoutData = stdoutCapture.fileHandleForReading.readDataToEndOfFile()
-                    let stderrData = stderrCapture.fileHandleForReading.readDataToEndOfFile()
+                    if process.terminationStatus == 0 {
+                        // Read captured output
+                        let stdoutData = stdoutCapture.fileHandleForReading.readDataToEndOfFile()
+                        let stderrData = stderrCapture.fileHandleForReading.readDataToEndOfFile()
 
-                    // Combine stdout and stderr
-                    let combinedData = stdoutData + stderrData
-                    let output = String(data: combinedData, encoding: .utf8) ?? ""
-                    continuation.resume(returning: output)
-                } else {
-                    continuation.resume(
-                        throwing: Error.nonZeroExit(
-                            command: arguments,
-                            exitCode: process.terminationStatus
+                        // Combine stdout and stderr
+                        let combinedData = stdoutData + stderrData
+                        let output = String(data: combinedData, encoding: .utf8) ?? ""
+                        continuation.resume(returning: output)
+                    } else {
+                        continuation.resume(
+                            throwing: Error.nonZeroExit(
+                                command: arguments,
+                                exitCode: process.terminationStatus
+                            )
                         )
-                    )
+                    }
                 }
             }
+        } onCancel: {
+            // Kill the process when the task is cancelled
+            logger.trace(
+                "Task cancelled, terminating process",
+                metadata: [
+                    "command": .array(arguments.map { .string($0) })
+                ]
+            )
+            process.terminate()
         }
     }
 }

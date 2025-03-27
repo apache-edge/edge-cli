@@ -22,6 +22,9 @@ struct RunCommand: AsyncParsableCommand {
         abstract: "Run EdgeOS projects."
     )
 
+    @Flag(name: .shortAndLong, help: "Attach a debugger to the container")
+    var debug: Bool = false
+
     func run() async throws {
         let logger = Logger(label: "apache-edge.cli.run")
 
@@ -35,7 +38,7 @@ struct RunCommand: AsyncParsableCommand {
         }
 
         try await swiftPM.build(
-            .target(executableTarget.name),
+            .product(executableTarget.name),
             .swiftSDK("aarch64-swift-linux-musl")
         )
 
@@ -48,17 +51,62 @@ struct RunCommand: AsyncParsableCommand {
 
         logger.info("Building container")
         let imageName = executableTarget.name.lowercased()
-        let imageSpec = ContainerImageSpec.withExecutable(executable: executable)
+
+        var imageSpec = ContainerImageSpec.withExecutable(executable: executable)
+
+        if debug {
+            // Include the ds2 executable in the container image.
+            guard
+                let ds2URL = Bundle.module.url(
+                    forResource: "ds2-124963fd-static-linux-arm64",
+                    withExtension: nil
+                )
+            else {
+                fatalError("Could not find ds2 executable in bundle resources")
+            }
+
+            let ds2Files = [
+                ContainerImageSpec.Layer.File(
+                    source: ds2URL,
+                    destination: "/bin/ds2",
+                    permissions: 0o755
+                )
+            ]
+            let ds2Layer = ContainerImageSpec.Layer(files: ds2Files)
+            imageSpec.layers.insert(ds2Layer, at: 0)
+        }
+
+        let outputPath = "\(executableTarget.name)-container.tar"
         try await buildDockerContainerImage(
             image: imageSpec,
             imageName: imageName,
-            outputPath: "\(executableTarget.name)-container.tar"
+            outputPath: outputPath
         )
 
-        logger.info("Loading into Docker")
-        try await Shell.run(["docker", "load", "-i", "\(executableTarget.name)-container.tar"])
+        logger.info(
+            "Loading into Docker",
+            metadata: [
+                "imageName": .string(imageName),
+                "path": .string(outputPath),
+            ]
+        )
+        try await Shell.run(["docker", "load", "-i", outputPath])
 
-        logger.info("Running container")
+        if debug {
+            logger.info(
+                "Running container with debugger",
+                metadata: ["imageName": .string(imageName)]
+            )
+            try await Shell.run([
+                "docker", "run", "--rm", "-it", "-p", "4242:4242",
+                "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined", imageName,
+                "ds2", "gdbserver", "0.0.0.0:4242", "/bin/\(executableTarget.name)",
+            ])
+            return
+        }
+
+        logger.info("Running container", metadata: ["imageName": .string(imageName)])
         try await Shell.run(["docker", "run", "--rm", imageName])
+
     }
 }

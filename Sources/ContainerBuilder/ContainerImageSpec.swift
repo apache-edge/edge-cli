@@ -3,25 +3,25 @@ import Foundation
 /// Represents a container image specification that can be used to build an image.
 public struct ContainerImageSpec {
     /// The CPU architecture for which the image is built.
-    public let architecture: String
+    public var architecture: String
 
     /// The operating system for which the image is built.
-    public let os: String
+    public var os: String
 
     /// The command to run when the container starts.
-    public let cmd: [String]
+    public var cmd: [String]
 
     /// The environment variables for the container.
-    public let env: [String]
+    public var env: [String]
 
     /// The working directory for the container.
-    public let workingDir: String
+    public var workingDir: String
 
     /// The layers that make up the container image.
-    public let layers: [Layer]
+    public var layers: [Layer]
 
     /// The date when the image was created.
-    public let created: Date
+    public var created: Date
 
     /// Creates a new container image specification.
     ///
