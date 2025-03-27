@@ -76,24 +76,34 @@ struct RunCommand: AsyncParsableCommand {
             imageSpec.layers.insert(ds2Layer, at: 0)
         }
 
+        let outputPath = "\(executableTarget.name)-container.tar"
         try await buildDockerContainerImage(
             image: imageSpec,
             imageName: imageName,
-            outputPath: "\(executableTarget.name)-container.tar"
+            outputPath: outputPath
         )
 
-        logger.info("Loading into Docker")
-        try await Shell.run(["docker", "load", "-i", "\(executableTarget.name)-container.tar"])
+        logger.info(
+            "Loading into Docker",
+            metadata: [
+                "imageName": .string(imageName),
+                "path": .string(outputPath),
+            ]
+        )
+        try await Shell.run(["docker", "load", "-i", outputPath])
 
         if debug {
-            logger.info("Running container with debugger")
+            logger.info(
+                "Running container with debugger",
+                metadata: ["imageName": .string(imageName)]
+            )
             try await Shell.run([
                 "docker", "run", "--rm", "-it", "-p", "4242:4242",
                 "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined", imageName,
                 "ds2", "gdbserver", "0.0.0.0:4242", "/bin/\(executableTarget.name)",
             ])
         } else {
-            logger.info("Running container")
+            logger.info("Running container", metadata: ["imageName": .string(imageName)])
             try await Shell.run(["docker", "run", "--rm", imageName])
         }
     }

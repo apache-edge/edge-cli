@@ -27,7 +27,7 @@ public enum Shell {
     /// - Returns: A string containing the command's standard output and standard error.
     /// - Throws: An error if the command execution fails
     @discardableResult public static func run(_ arguments: [String]) async throws -> String {
-        logger.info("Executing: \(arguments.joined(separator: " "))")
+        logger.info("Running command", metadata: ["command": .array(arguments.map { .string($0) })])
 
         let process = Process()
 
@@ -99,7 +99,12 @@ public enum Shell {
             }
         } onCancel: {
             // Kill the process when the task is cancelled
-            logger.trace("Task cancelled, terminating process: \(arguments.joined(separator: " "))")
+            logger.trace(
+                "Task cancelled, terminating process",
+                metadata: [
+                    "command": .array(arguments.map { .string($0) })
+                ]
+            )
             process.terminate()
         }
     }
