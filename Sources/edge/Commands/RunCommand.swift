@@ -102,9 +102,11 @@ struct RunCommand: AsyncParsableCommand {
                 "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined", imageName,
                 "ds2", "gdbserver", "0.0.0.0:4242", "/bin/\(executableTarget.name)",
             ])
-        } else {
-            logger.info("Running container", metadata: ["imageName": .string(imageName)])
-            try await Shell.run(["docker", "run", "--rm", imageName])
+            return
         }
+
+        logger.info("Running container", metadata: ["imageName": .string(imageName)])
+        try await Shell.run(["docker", "run", "--rm", imageName])
+
     }
 }
