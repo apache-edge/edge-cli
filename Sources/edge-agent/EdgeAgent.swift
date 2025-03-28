@@ -36,11 +36,16 @@ struct EdgeAgent: AsyncParsableCommand {
         )
 
         let healthService = HealthService()
+        healthService.provider.updateStatus(
+            .serving,
+            forService: Edge_Agent_Services_V1_EdgeAgentService.descriptor
+        )
 
         let grpcServer = GRPCServer(
             transport: transport,
             services: [
-                healthService
+                healthService,
+                EdgeAgentService(),
             ]
         )
 
