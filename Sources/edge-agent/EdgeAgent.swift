@@ -18,6 +18,14 @@ struct EdgeAgent: AsyncParsableCommand {
     var port: Int = 50051
 
     func run() async throws {
+        LoggingSystem.bootstrap { label in
+            var handler = StreamLogHandler.standardError(label: label)
+            #if DEBUG
+                handler.logLevel = .trace
+            #endif
+            return handler
+        }
+
         let logger = Logger(label: "apache-edge.agent")
 
         logger.info("Starting Edge Agent on port \(port)")
