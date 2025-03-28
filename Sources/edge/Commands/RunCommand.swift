@@ -1,8 +1,13 @@
 import ArgumentParser
 import ContainerBuilder
+import EdgeAgentGRPC
 import EdgeCLI
 import Foundation
+import GRPCCore
+import GRPCNIOTransportHTTP2
 import Logging
+import NIO
+import NIOFileSystem
 import Shell
 
 struct RunCommand: AsyncParsableCommand {
@@ -85,30 +90,58 @@ struct RunCommand: AsyncParsableCommand {
             outputPath: outputPath
         )
 
-        logger.info(
-            "Loading into Docker",
-            metadata: [
-                "imageName": .string(imageName),
-                "path": .string(outputPath),
-            ]
-        )
-        try await Shell.run(["docker", "load", "-i", outputPath])
-
-        if debug {
-            logger.info(
-                "Running container with debugger",
-                metadata: ["imageName": .string(imageName)]
+        try await withGRPCClient(
+            transport: .http2NIOPosix(
+                target: .dns(
+                    host: agentConnectionOptions.agentHost,
+                    port: agentConnectionOptions.agentPort
+                ),
+                transportSecurity: .plaintext
             )
-            try await Shell.run([
-                "docker", "run", "--rm", "-it", "-p", "4242:4242",
-                "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined", imageName,
-                "ds2", "gdbserver", "0.0.0.0:4242", "/bin/\(executableTarget.name)",
-            ])
-            return
+        ) { client in
+            let agent = Edge_Agent_Services_V1_EdgeAgentService.Client(wrapping: client)
+            try await agent.runContainer { writer in
+                // First, send the header.
+                try await writer.write(
+                    .with {
+                        $0.header.imageName = imageName
+                    }
+                )
+
+                // Send the chunks
+                let fileHandle = try await FileSystem.shared.openFile(
+                    forReadingAt: FilePath(outputPath)
+                )
+
+                do {
+                    for try await chunk in fileHandle.readChunks() {
+                        try await writer.write(
+                            .with {
+                                $0.requestType = .chunk(
+                                    .with { $0.data = Data(buffer: chunk) }
+                                )
+                            }
+                        )
+                    }
+                } catch {
+                    try await fileHandle.close()
+                    throw error
+                }
+                try await fileHandle.close()
+
+                // Send the control command to start the container.
+                try await writer.write(
+                    .with {
+                        $0.requestType = .control(
+                            .with { $0.command = .run(.with { $0.debug = debug }) }
+                        )
+                    }
+                )
+            } onResponse: { response in
+                for try await message in response.messages {
+                    print(message)
+                }
+            }
         }
-
-        logger.info("Running container", metadata: ["imageName": .string(imageName)])
-        try await Shell.run(["docker", "run", "--rm", imageName])
-
     }
 }
