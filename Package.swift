@@ -18,6 +18,7 @@ let package = Package(
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "1.0.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.7.0"),
         .package(url: "https://github.com/grpc/grpc-swift-extras.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.81.0"),
     ],
     targets: [
         /// The main executable provided by edge-cli.
@@ -25,8 +26,11 @@ let package = Package(
             name: "edge",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .target(name: "EdgeCLI"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "_NIOFileSystem", package: "swift-nio"),
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+                .target(name: "EdgeAgentGRPC"),
+                .target(name: "EdgeCLI"),
             ],
             resources: [
                 .copy("Resources")
@@ -44,7 +48,9 @@ let package = Package(
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
                 .product(name: "GRPCServiceLifecycle", package: "grpc-swift-extras"),
                 .product(name: "GRPCHealthService", package: "grpc-swift-extras"),
+                .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .target(name: "EdgeAgentGRPC"),
+                .target(name: "Shell"),
             ]
         ),
 
