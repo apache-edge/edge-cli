@@ -25,6 +25,8 @@ struct RunCommand: AsyncParsableCommand {
     @Flag(name: .shortAndLong, help: "Attach a debugger to the container")
     var debug: Bool = false
 
+    @OptionGroup var agentConnectionOptions: AgentConnectionOptions
+
     func run() async throws {
         let logger = Logger(label: "apache-edge.cli.run")
 
