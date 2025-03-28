@@ -86,6 +86,9 @@ let package = Package(
             dependencies: [
                 .product(name: "GRPCCore", package: "grpc-swift"),
                 .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
+            ],
+            exclude: [
+                "Proto/edge_agent.protoset"
             ]
         ),
     ]
