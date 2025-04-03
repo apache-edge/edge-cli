@@ -17,7 +17,7 @@ struct RunCommand: AsyncParsableCommand {
         var description: String {
             switch self {
             case .noExecutableTarget:
-                return String(localized: "No executable target found in package")
+                return "No executable target found in package"
             }
         }
     }
@@ -118,7 +118,7 @@ struct RunCommand: AsyncParsableCommand {
                         try await writer.write(
                             .with {
                                 $0.requestType = .chunk(
-                                    .with { $0.data = Data(buffer: chunk) }
+                                    .with { $0.data = Data(chunk.readableBytesView) }
                                 )
                             }
                         )

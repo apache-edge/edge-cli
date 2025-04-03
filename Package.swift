@@ -19,6 +19,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.7.0"),
         .package(url: "https://github.com/grpc/grpc-swift-extras.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.81.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.12.2"),
     ],
     targets: [
         /// The main executable provided by edge-cli.
@@ -68,7 +69,8 @@ let package = Package(
         .target(
             name: "ContainerBuilder",
             dependencies: [
-                .target(name: "Shell")
+                .target(name: "Shell"),
+                .product(name: "Crypto", package: "swift-crypto"),
             ]
         ),
 

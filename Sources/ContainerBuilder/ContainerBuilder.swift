@@ -1,4 +1,4 @@
-import CryptoKit
+import Crypto
 import Foundation
 import Shell
 
@@ -136,7 +136,7 @@ public func buildDockerContainerImage(
     try FileManager.default.removeItem(at: tempDir)
 }
 
-// Calculate SHA256 hash using CryptoKit
+// Calculate SHA256 hash using Swift Crypto
 private func sha256(data: Data) -> String {
     let digest = SHA256.hash(data: data)
     return digest.map { String(format: "%02x", $0) }.joined()
