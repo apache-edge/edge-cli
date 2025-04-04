@@ -18,7 +18,7 @@ jobs:
         os: [ubuntu-22.04, macos-latest]
         swift: ["6.0.3"]
     steps:
-    - uses: swift-actions/setup-swift@v2.2.0
+    - uses: swift-actions/setup-swift@96e1dd40c7aa863eafac5979fd597972980a64c7
       with:
         swift-version: ${{ matrix.swift }}
     - uses: actions/checkout@v4
