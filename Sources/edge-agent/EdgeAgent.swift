@@ -30,23 +30,23 @@ struct EdgeAgent: AsyncParsableCommand {
 
         logger.info("Starting Edge Agent on port \(port)")
 
-        let transport = HTTP2ServerTransport.Posix(
-            address: .ipv4(host: "0.0.0.0", port: port),
-            transportSecurity: .plaintext
-        )
-
         let healthService = HealthService()
         healthService.provider.updateStatus(
             .serving,
             forService: Edge_Agent_Services_V1_EdgeAgentService.descriptor
         )
 
+        let services: [any RegistrableRPCService] = [
+            healthService,
+            EdgeAgentService(),
+        ]
+
         let grpcServer = GRPCServer(
-            transport: transport,
-            services: [
-                healthService,
-                EdgeAgentService(),
-            ]
+            transport: .http2NIOPosix(
+                address: .ipv6(host: "::", port: port),
+                transportSecurity: .plaintext
+            ),
+            services: services
         )
 
         let group = ServiceGroup(
