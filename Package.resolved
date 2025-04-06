@@ -1,12 +1,12 @@
 {
-  "originHash" : "3fdea633ce1bf54ea9439217287fd68d6551bf835fa2286e18d142cd9d8865c0",
+  "originHash" : "9bb5297beb2213db32c028dbb6feb3281b08acb473c47cf8509b42150dfbe05b",
   "pins" : [
     {
       "identity" : "edge-agent-common",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apache-edge/edge-agent-common",
+      "location" : "https://github.com/apache-edge/edge-agent-common.git",
       "state" : {
-        "revision" : "952035635c630d366dfbcff04af1934c7c051f23"
+        "revision" : "296c7a7781621d2cc8c81f6bbb5a4b48bc030e52"
       }
     },
     {
