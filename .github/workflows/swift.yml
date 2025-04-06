@@ -24,4 +24,14 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build CLI
       run: swift build --target edge -v
+    - name: Get binary path
+      id: get-binary
+      run: |
+        echo "BINARY_PATH=$(swift build --show-bin-path)/edge" >> $GITHUB_ENV
+    - name: Upload binary artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: edge-cli-${{ matrix.os }}
+        path: ${{ env.BINARY_PATH }}
+        retention-days: 14
 
