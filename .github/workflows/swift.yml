@@ -1,0 +1,74 @@
+# This workflow will build a Swift project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-swift
+
+name: Swift
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-latest]
+        swift: ["6.0.3"]
+    steps:
+    - uses: swift-actions/setup-swift@96e1dd40c7aa863eafac5979fd597972980a64c7
+      with:
+        swift-version: ${{ matrix.swift }}
+    - uses: actions/checkout@v4
+    - name: Build CLI
+      run: swift build --product edge --configuration release
+    - name: Find binary path
+      id: get-binary
+      run: |
+        BIN_PATH=$(swift build --show-bin-path --configuration release)
+        echo "Build directory contents:"
+        
+        if [ -f "$BIN_PATH/edge" ]; then
+          echo "BINARY_PATH=$BIN_PATH/edge" >> $GITHUB_ENV
+          echo "Binary found at $BIN_PATH/edge"
+        else
+          echo "Searching for binary recursively in $BIN_PATH"
+          FOUND_PATH=$(find $BIN_PATH -name "edge" -type f | head -n 1)
+          if [ -n "$FOUND_PATH" ]; then
+            echo "BINARY_PATH=$FOUND_PATH" >> $GITHUB_ENV
+            echo "Binary found at $FOUND_PATH"
+          else
+            echo "::error::Binary not found in build directory"
+            exit 1
+          fi
+        fi
+    - name: Verify binary exists
+      run: |
+        if [ ! -f "${{ env.BINARY_PATH }}" ]; then
+          echo "::error::Binary not found at ${{ env.BINARY_PATH }}"
+          exit 1
+        fi
+        echo "Binary exists at ${{ env.BINARY_PATH }}"
+        
+        # Check if binary is executable
+        if [ -x "${{ env.BINARY_PATH }}" ]; then
+          echo "Binary is executable"
+        else
+          echo "Making binary executable"
+          chmod +x "${{ env.BINARY_PATH }}"
+        fi
+    - name: Upload binary artifact
+      id: upload-artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: edge-cli-${{ matrix.os }}
+        path: ${{ env.BINARY_PATH }}
+        retention-days: 14
+        if-no-files-found: error
+    - name: Output download info
+      run: |
+        echo "::notice::Binary artifact uploaded with ID: ${{ steps.upload-artifact.outputs.artifact-id }}"
+        echo "::notice::Download URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+

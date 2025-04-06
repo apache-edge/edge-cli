@@ -1,4 +1,4 @@
-// swift-tools-version: 6.1
+// swift-tools-version: 6.0.3
 import PackageDescription
 
 let package = Package(
@@ -17,7 +17,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.12.2"),
         .package(
             url: "https://github.com/apache-edge/edge-agent-common.git",
-            revision: "952035635c630d366dfbcff04af1934c7c051f23"
+            revision: "296c7a7781621d2cc8c81f6bbb5a4b48bc030e52"
         ),
     ],
     targets: [
