@@ -23,11 +23,43 @@ jobs:
         swift-version: ${{ matrix.swift }}
     - uses: actions/checkout@v4
     - name: Build CLI
-      run: swift build --target edge -v
-    - name: Get binary path
+      run: swift build --target edge
+    - name: Find binary path
       id: get-binary
       run: |
-        echo "BINARY_PATH=$(swift build --show-bin-path)/edge" >> $GITHUB_ENV
+        BIN_PATH=$(swift build --show-bin-path)
+        echo "Build directory contents:"
+        ls -la $BIN_PATH
+        
+        if [ -f "$BIN_PATH/edge" ]; then
+          echo "BINARY_PATH=$BIN_PATH/edge" >> $GITHUB_ENV
+          echo "Binary found at $BIN_PATH/edge"
+        else
+          echo "Searching for binary recursively in $BIN_PATH"
+          FOUND_PATH=$(find $BIN_PATH -name "edge" -type f | head -n 1)
+          if [ -n "$FOUND_PATH" ]; then
+            echo "BINARY_PATH=$FOUND_PATH" >> $GITHUB_ENV
+            echo "Binary found at $FOUND_PATH"
+          else
+            echo "::error::Binary not found in build directory"
+            exit 1
+          fi
+        fi
+    - name: Verify binary exists
+      run: |
+        if [ ! -f "${{ env.BINARY_PATH }}" ]; then
+          echo "::error::Binary not found at ${{ env.BINARY_PATH }}"
+          exit 1
+        fi
+        echo "Binary exists at ${{ env.BINARY_PATH }}"
+        
+        # Check if binary is executable
+        if [ -x "${{ env.BINARY_PATH }}" ]; then
+          echo "Binary is executable"
+        else
+          echo "Making binary executable"
+          chmod +x "${{ env.BINARY_PATH }}"
+        fi
     - name: Upload binary artifact
       id: upload-artifact
       uses: actions/upload-artifact@v4
