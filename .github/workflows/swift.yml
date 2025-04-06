@@ -23,13 +23,12 @@ jobs:
         swift-version: ${{ matrix.swift }}
     - uses: actions/checkout@v4
     - name: Build CLI
-      run: swift build --target EdgeCLI
+      run: swift build --product edge
     - name: Find binary path
       id: get-binary
       run: |
         BIN_PATH=$(swift build --show-bin-path)
         echo "Build directory contents:"
-        ls -la $BIN_PATH
         
         if [ -f "$BIN_PATH/edge" ]; then
           echo "BINARY_PATH=$BIN_PATH/edge" >> $GITHUB_ENV
