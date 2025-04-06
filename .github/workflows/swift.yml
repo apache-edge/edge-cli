@@ -23,7 +23,7 @@ jobs:
         swift-version: ${{ matrix.swift }}
     - uses: actions/checkout@v4
     - name: Build CLI
-      run: swift build --target EdgeCLI
+      run: swift build
     - name: Find binary path
       id: get-binary
       run: |
