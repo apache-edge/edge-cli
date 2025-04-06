@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.1
 import PackageDescription
 
 let package = Package(
@@ -6,9 +6,19 @@ let package = Package(
     platforms: [
         .macOS(.v15)
     ],
+    products: [
+        .executable(name: "edge", targets: ["edge"])
+    ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.6.3"),
+        .package(url: "https://github.com/grpc/grpc-swift-nio-transport.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.81.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.12.2"),
+        .package(
+            url: "https://github.com/apache-edge/edge-agent-common.git",
+            revision: "952035635c630d366dfbcff04af1934c7c051f23"
+        ),
     ],
     targets: [
         /// The main executable provided by edge-cli.
@@ -16,21 +26,14 @@ let package = Package(
             name: "edge",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .target(name: "EdgeCLI"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "_NIOFileSystem", package: "swift-nio"),
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+                .product(name: "EdgeAgentGRPC", package: "edge-agent-common"),
+                .target(name: "EdgeCLI"),
             ],
             resources: [
                 .copy("Resources")
-            ]
-        ),
-
-        /// The EdgeAgent executable. It's currently here for development purposes, and will be
-        /// moved to a separate package in the future.
-        .executableTarget(
-            name: "EdgeAgent",
-            dependencies: [
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "Logging", package: "swift-log"),
             ]
         ),
 
@@ -39,7 +42,7 @@ let package = Package(
             name: "EdgeCLI",
             dependencies: [
                 .target(name: "ContainerBuilder"),
-                .target(name: "Shell"),
+                .product(name: "Shell", package: "edge-agent-common"),
                 .product(name: "Logging", package: "swift-log"),
             ]
         ),
@@ -48,15 +51,8 @@ let package = Package(
         .target(
             name: "ContainerBuilder",
             dependencies: [
-                .target(name: "Shell")
-            ]
-        ),
-
-        /// Utility for executing shell commands.
-        .target(
-            name: "Shell",
-            dependencies: [
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Shell", package: "edge-agent-common"),
+                .product(name: "Crypto", package: "swift-crypto"),
             ]
         ),
     ]
