@@ -11,8 +11,6 @@ on:
 
 jobs:
   build:
-    container:
-      image: swift:6.1.0
     name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -25,7 +23,7 @@ jobs:
         swift-version: ${{ matrix.swift }}
     - uses: actions/checkout@v4
     - name: Build CLI
-      run: swift build --product edge
+      run: swift build --product edge --configuration release
     - name: Find binary path
       id: get-binary
       run: |
