@@ -27,8 +27,14 @@ struct RunCommand: AsyncParsableCommand {
         abstract: "Run EdgeOS projects."
     )
 
-    @Flag(name: .shortAndLong, help: "Attach a debugger to the container")
+    @Flag(name: .long, help: "Attach a debugger to the container")
     var debug: Bool = false
+
+    @Flag(name: .long, help: "Run the container in the background")
+    var detach: Bool = false
+
+    @Option(name: .long, help: "The Swift SDK to use.")
+    var swiftSDK: String = "aarch64-swift-linux-musl"
 
     @OptionGroup var agentConnectionOptions: AgentConnectionOptions
 
@@ -46,12 +52,12 @@ struct RunCommand: AsyncParsableCommand {
 
         try await swiftPM.build(
             .product(executableTarget.name),
-            .swiftSDK("aarch64-swift-linux-musl")
+            .swiftSDK(swiftSDK)
         )
 
         let binPath = try await swiftPM.build(
             .showBinPath,
-            .swiftSDK("aarch64-swift-linux-musl"),
+            .swiftSDK(swiftSDK),
             .quiet
         ).trimmingCharacters(in: .whitespacesAndNewlines)
         let executable = URL(fileURLWithPath: binPath).appendingPathComponent(executableTarget.name)
@@ -147,7 +153,17 @@ struct RunCommand: AsyncParsableCommand {
                 )
             } onResponse: { response in
                 for try await message in response.messages {
-                    print(message)
+                    switch message.responseType {
+                    case .started(let started):
+                        if detach {
+                            if started.debugPort != 0 {
+                                print("Started container with debug port \(started.debugPort)")
+                            }
+                            return
+                        }
+                    case nil:
+                        ()
+                    }
                 }
             }
         }
