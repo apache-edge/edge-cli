@@ -17,7 +17,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.12.2"),
         .package(
             url: "https://github.com/apache-edge/edge-agent-common.git",
-            revision: "296c7a7781621d2cc8c81f6bbb5a4b48bc030e52"
+            revision: "ac664c99e74935107f814e14689ca170fd34b255"
         ),
     ],
     targets: [
