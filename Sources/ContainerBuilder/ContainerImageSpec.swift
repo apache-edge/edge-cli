@@ -67,7 +67,7 @@ public struct ContainerImageSpec {
         let containerFiles = [
             Layer.File(
                 source: executable,
-                destination: "/bin/\(executableName)",
+                destination: "/bin/\(executableName.lowercased())",  // TODO: Lowercasing this is currently a hack to make the executable the same as the image name.
                 permissions: 0o755
             )
         ]
