@@ -16,9 +16,10 @@ protocol Imager {
 
     /// Get a list of available drives that can be imaged in alphabetical order.
     ///
+    /// - Parameter onlyExternalDrives: If true, only external drives will be returned.
     /// - Returns: An array of drive identifiers that can be used for imaging.
     /// - Throws: An `ImagerError` if the drives cannot be enumerated.
-    func availableDrivesToImage(onlyExternalDrives: Bool) throws -> [String]
+    func availableDrivesToImage(onlyExternalDrives: Bool) throws -> [Drive]
 
     /// Begin imaging the drive.
     /// 

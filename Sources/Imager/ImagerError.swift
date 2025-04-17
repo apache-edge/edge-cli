@@ -2,7 +2,7 @@
 ///
 /// These errors represent various failure scenarios that might occur when
 /// attempting to write an image file to a drive.
-enum ImagerError: Error {
+public enum ImagerError: Error {
     /// The provided image file is invalid.
     ///
     /// This error occurs when the image file cannot be read or is in an unsupported format.
@@ -55,7 +55,7 @@ extension ImagerError: CustomStringConvertible {
     public var description: String {
         switch self {
         case .invalidImageFile(let reason):
-            return "Invalid image file: \(reason). Only ZIP, TAR, and IMG formats are supported."
+            return "Invalid Image File: \(reason). Only ZIP, TAR, and IMG formats are supported."
             
         case .invalidDrive(let reason):
             return "Invalid drive: \(reason)"

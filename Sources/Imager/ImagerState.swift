@@ -1,35 +1,33 @@
-/// Represents the current state of the imaging process.
+/// Represents the current status of the imaging process.
 ///
 /// This enum tracks the lifecycle of an imaging operation, from initialization through
 /// completion or failure, including progress updates during the process.
-enum ImagerState {
+public enum ImagerState {
     /// The imager is initialized but has not started imaging.
     ///
-    /// This is the initial state before the imaging process begins.
+    /// This is the default state before `startImaging()` is called.
     case idle
     
-    /// The imaging process is actively running.
+    /// The imaging process is currently in progress.
     ///
-    /// This state indicates that data is being written to the target drive.
+    /// The associated value `Progress` provides details about the current progress,
+    /// such as bytes written and total bytes.
+    case progress(Progress)
+    
+    /// The imaging process has started but has not yet completed or failed.
+    ///
+    /// This state indicates that the operation is active.
     case imaging
     
-    /// The imaging process has successfully completed.
+    /// The imaging process completed successfully.
     ///
-    /// This state indicates that all data has been successfully written to the target drive.
+    /// This state indicates that the image file was written to the drive without errors.
     case completed
     
-    /// The imaging process has failed.
+    /// The imaging process failed.
     ///
-    /// This state includes an associated `ImagerError` value that provides
-    /// detailed information about the cause of the failure.
+    /// The associated value `ImagerError` provides details about the failure reason.
     case failed(ImagerError)
-    
-    /// A progress update for the ongoing imaging process.
-    ///
-    /// This state includes a `Progress` value that contains information about
-    /// the current progress of the imaging operation, including the total bytes,
-    /// completed bytes, and percentage completion.
-    case progress(Progress)
 }
 
 // MARK: - CustomStringConvertible

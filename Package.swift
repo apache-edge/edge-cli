@@ -31,6 +31,7 @@ let package = Package(
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
                 .product(name: "EdgeAgentGRPC", package: "edge-agent-common"),
                 .target(name: "EdgeCLI"),
+                .target(name: "Imager"),
             ],
             resources: [
                 .copy("Resources")
