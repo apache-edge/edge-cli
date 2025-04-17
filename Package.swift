@@ -55,5 +55,10 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto"),
             ]
         ),
+
+        /// Tools to put EdgeOS images onto drives.
+        .target(
+            name: "Imager"  
+        ),
     ]
 )
