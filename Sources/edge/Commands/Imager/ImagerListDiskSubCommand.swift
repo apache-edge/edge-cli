@@ -1,9 +1,6 @@
 import ArgumentParser
 import Foundation
 import Imager
-#if canImport(Darwin)
-import Darwin // For signal handling
-#endif
 
 struct ImagerListDisksSubCommand: AsyncParsableCommand {
     
@@ -20,18 +17,18 @@ struct ImagerListDisksSubCommand: AsyncParsableCommand {
     var timeout: Int?
 
     func run() async throws {
-        let imager = ImagerFactory.createImager()
+        let diskLister = ImagerFactory.createDiskLister()
         try await MainActor.run {
-            try listAndPrintDisks(imager: imager, listAll: self.all)
+            try listAndPrintDisks(lister: diskLister, listAll: self.all)
         }
     }
 
     @MainActor
-    private func listAndPrintDisks(imager: Imager, listAll: Bool) throws {
-        let drives = try imager.availableDrivesToImage(onlyExternalDrives: !listAll)
+    private func listAndPrintDisks(lister: DiskLister, listAll: Bool) throws {
+        let drives = try lister.availableDrivesToImage(onlyExternalDrives: !listAll)
 
         if drives.isEmpty {
-            print(listAll ? "No drives found." : "No suitable external drives found. Use --all to list internal drives.")
+            print("No suitable drives found.")
             fflush(stdout)
             return
         }

@@ -2,7 +2,7 @@
 ///
 /// This enum tracks the lifecycle of an imaging operation, from initialization through
 /// completion or failure.
-public enum ImagerState {
+public enum ImagerState: Sendable {
     /// The imager is initialized but has not started imaging.
     ///
     /// This is the default state before `startImaging()` is called.

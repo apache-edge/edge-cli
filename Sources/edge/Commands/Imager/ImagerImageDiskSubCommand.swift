@@ -1,6 +1,6 @@
-import Imager
 import ArgumentParser
 import Foundation
+import Imager
 
 struct ImagerImageDiskSubCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -29,21 +29,77 @@ struct ImagerImageDiskSubCommand: AsyncParsableCommand {
         print("  Target Drive: /dev/\(drivePath)")
         print("  This may take some time...")
 
-        let imager = MacOSImager(imageFilePath: source, drivePath: drivePath)
-
-        do {
-            // startImaging is synchronous, but handles launching the process
-            try imager.startImaging()
-            // If startImaging returns without throwing, the process was initiated.
-            // Actual success/failure/progress is handled internally by MacOSImager (potentially).
-            // A more robust solution would involve async streams for progress.
-            print("\nImaging process initiated successfully.")
-            print("Monitor system activity or logs for completion.")
-        } catch let error as ImagerError {
-            print("\nError during imaging: \(error.description)")
-            throw ExitCode.failure
-        } catch {
-            print("\nAn unexpected error occurred: \(error.localizedDescription)")
+        let imager = ImagerFactory.createImager(imageFilePath: source, drivePath: drivePath)
+        
+        // Setup for progress display
+        print("\nProgress: ")
+        
+        // Create a task to handle the imaging process
+        let task = Task {
+            // Create an actor to safely handle the lastUpdateTime
+            actor ProgressState {
+                private var lastUpdateTime = Date()
+                
+                func shouldUpdate(now: Date, isFinished: Bool) -> Bool {
+                    if isFinished || now.timeIntervalSince(lastUpdateTime) >= 0.5 {
+                        lastUpdateTime = now
+                        return true
+                    }
+                    return false
+                }
+            }
+            
+            let progressState = ProgressState()
+            
+            // Create a continuation to handle the async callback
+            return await withCheckedContinuation { continuation in
+                // The startImaging method uses a closure for progress/error handling
+                imager.startImaging { [progressState] progress, error in
+                    if let error = error {
+                        // Clear the current line before showing the error
+                        print("\r\u{1B}[2K", terminator: "")
+                        print("Error during imaging: \(error.description)")
+                        continuation.resume(returning: false)
+                    } else {
+                        // Handle progress updates
+                        Task {
+                            let now = Date()
+                            // Check if we should update the display
+                            let shouldUpdate = await progressState.shouldUpdate(now: now, isFinished: progress.isFinished)
+                            
+                            if shouldUpdate {
+                                // Calculate percentage
+                                let percentage = Int(progress.fractionCompleted * 100)
+                                
+                                // Create progress bar
+                                let barWidth = 50
+                                let completedWidth = Int(Double(barWidth) * progress.fractionCompleted)
+                                let bar = String(repeating: "=", count: completedWidth) + 
+                                        String(repeating: " ", count: barWidth - completedWidth)
+                                
+                                // Display progress
+                                print("\r[\(bar)] \(percentage)%", terminator: "")
+                                fflush(stdout)
+                                
+                                // Check for completion
+                                if progress.isFinished {
+                                    print("\nImaging process completed successfully!")
+                                    continuation.resume(returning: true)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        print("\nImaging process initiated. Press Ctrl+C to cancel.")
+        
+        // Wait for the imaging process to complete
+        let success = await task.value
+        
+        // Exit with appropriate code
+        if !success {
             throw ExitCode.failure
         }
     }

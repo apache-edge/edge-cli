@@ -2,7 +2,7 @@
 ///
 /// These errors represent various failure scenarios that might occur when
 /// attempting to write an image file to a drive.
-public enum ImagerError: Error {
+public enum ImagerError: Error, Sendable {
     /// The provided image file is invalid.
     ///
     /// This error occurs when the image file cannot be read or is in an unsupported format.
