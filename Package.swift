@@ -31,6 +31,7 @@ let package = Package(
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
                 .product(name: "EdgeAgentGRPC", package: "edge-agent-common"),
                 .target(name: "EdgeCLI"),
+                .target(name: "Imager"),
             ],
             resources: [
                 .copy("Resources")
@@ -54,6 +55,11 @@ let package = Package(
                 .product(name: "Shell", package: "edge-agent-common"),
                 .product(name: "Crypto", package: "swift-crypto"),
             ]
+        ),
+
+        /// Tools to put EdgeOS images onto drives.
+        .target(
+            name: "Imager"  
         ),
     ]
 )

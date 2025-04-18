@@ -7,3 +7,11 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 .vscode
+
+# Swift build artifacts that might be created in the wrong location
+*.swiftdeps
+*.o
+*.d
+*.swiftmodule
+*.swiftsourceinfo
+*.swiftdoc
