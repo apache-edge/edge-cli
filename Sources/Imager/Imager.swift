@@ -1,10 +1,13 @@
 import Foundation
 
+/// Public typealias for disk update notifications, usable by consumers
+public typealias DiskUpdateCallback = () -> Void
+
 /// Protocol defining the interface for an image writer.
 ///
 /// This protocol defines the requirements for a component that can write
 /// an image file to a drive.
-protocol Imager {
+public protocol Imager {
     /// Path to the image file to be imaged.
     var imageFilePath: String { get }
 
@@ -37,7 +40,7 @@ protocol Imager {
     ///
     /// - Parameter handler: A closure that will be called with progress updates.
     ///   The closure receives the current progress and an optional error if one occurred.
-    func progress(_ handler: @escaping (Progress, ImagerError?) -> Void)
+    func progress(_ handler: @escaping (Foundation.Progress, ImagerError?) -> Void)
 
     /// Initialize a new imager with the specified image file and drive paths.
     ///

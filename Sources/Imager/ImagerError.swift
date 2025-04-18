@@ -41,11 +41,22 @@ public enum ImagerError: Error {
     /// The associated value provides information about the cause of the error.
     case driveDetectionError(reason: String)
     
+    /// Error related to disk watching functionality.
+    ///
+    /// This error occurs when setting up or managing DiskArbitration callbacks fails.
+    case diskWatchError(reason: String)
+    
+    /// Functionality not implemented.
+    ///
+    /// This error occurs when a feature is not yet implemented for a particular platform.
+    case notImplemented(reason: String)
+    
     /// An unknown error occurred.
     ///
     /// This error represents any failure that doesn't fall into the other categories.
     /// It should be used as a last resort when the specific error type cannot be determined.
     case unknown(reason: String?)
+
 }
 
 // MARK: - CustomStringConvertible
@@ -73,6 +84,12 @@ extension ImagerError: CustomStringConvertible {
             
         case .driveDetectionError(let reason):
             return "Error detecting drives: \(reason)"
+            
+        case .diskWatchError(let reason):
+            return "Disk Watch Error: \(reason)"
+            
+        case .notImplemented(let reason):
+            return "Functionality not implemented: \(reason)"
             
         case .unknown(let reason):
             if let reason = reason, !reason.isEmpty {
